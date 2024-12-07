@@ -33,8 +33,7 @@ gat_model = GAT(input_dim, hidden_dim, output_dim)
 optimizer = torch.optim.Adam(gat_model.parameters(), lr=0.01, weight_decay=5e-4)
 loss_fn = torch.nn.CrossEntropyLoss()
 
-# Dummy target labels for illustration (e.g., clustering or classification)
-# Replace with real labels in actual use
+# Dummy target labels for illustration (e.g., clustering or classification) Replace with real labels in actual use
 target = torch.randint(0, 3, (graph.x.size(0),))
 
 # Training loop
