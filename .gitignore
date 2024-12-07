@@ -1,0 +1,6 @@
+images/
+slurm_logs/
+*.DS_Store
+*._.DS_Store
+*.json
+
