@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import json
 from tqdm import tqdm
+import random
 
 print(torch.backends.mps.is_available())
 
@@ -46,7 +47,9 @@ with open(os.path.join(path, 'fashion.json'), 'r') as f:
             fashion_data.append(json.loads(line.strip()))
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")
-subset_size = len(fashion_data) // 2 
+
+subset_size = 10000  
+
 # Function to create image URL
 def convert_to_url(signature):
     prefix = 'http://i.pinimg.com/400x/%s/%s/%s/%s.jpg'
@@ -113,19 +116,32 @@ def get_style_embedding(image_url, category):
     return embedding
 
 # Extract Embeddings with Overall Progress Bar for the subset
+embeddings = []
+
 with tqdm(total=subset_size, desc="Processing subset of fashion data") as pbar:
-    for item in fashion_data[:subset_size]:  # Slice the dataset to use only half
+    for item in fashion_data[:subset_size]:
         product_url = convert_to_url(item['product'])
         scene_url = convert_to_url(item['scene'])
 
-        # Get embeddings and specify category for downloading
+        # Get embeddings
         product_embedding = get_style_embedding(product_url, category="product")
         scene_embedding = get_style_embedding(scene_url, category="scene")
-        
-        # Ensure embeddings were created before further processing
+
         if product_embedding is not None and scene_embedding is not None:
-            # Here you could store or use the embeddings, instead of printing
-            pass
+            embeddings.append({
+                "product_id": item["product"],  # Store the unique product ID
+                "scene_id": item["scene"],      # Store the unique scene ID
+                "product_embedding": product_embedding.squeeze().tolist(),
+                "scene_embedding": scene_embedding.squeeze().tolist()
+            })
         
-        # Update the progress bar
         pbar.update(1)
+
+
+import json
+
+with open("embeddings.json", "w") as f:
+    json.dump(embeddings, f)
+
+
+torch.save(embeddings, "embeddings.pt")
