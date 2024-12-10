@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     # Select 10 random images
     print("Selecting random images...")
-    selected_indices, selected_embeddings = select_random_images(image_embeddings, num_samples=10)
+    selected_indices, selected_embeddings = select_random_images(image_embeddings, num_samples=3)
     print(f"Selected indices: {selected_indices}")
 
     # Get recommendations

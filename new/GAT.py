@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     # Train the GAT model
     print("Training GAT model...")
-    trained_model = train_gat(graph_data, input_dim, hidden_dim, output_dim, epochs=50, lr=0.01)
+    trained_model = train_gat(graph_data, input_dim, hidden_dim, output_dim, epochs=500, lr=0.01)
 
     # Save the trained GAT model
     save_path = "trained_gat_model.pt"
