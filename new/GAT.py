@@ -72,7 +72,7 @@ def train_gat(graph_data, input_dim, hidden_dim, output_dim, epochs=100, lr=0.01
     return model
 
 # Step 4: Save Model
-def save_gat_model(model, save_path="trained_gat_model.pt"):
+def save_gat_model(model, save_path="trained_gat_model_full.pt"):
     """
     Save the trained GAT model to a file.
     :param model: Trained GAT model.
@@ -84,7 +84,7 @@ def save_gat_model(model, save_path="trained_gat_model.pt"):
 # Step 5: Main Function
 if __name__ == '__main__':
     # Path to saved graph
-    graph_path = "graph.pt"
+    graph_path = "graph_full.pt"
 
     # Load graph data
     print("Loading graph...")
@@ -100,6 +100,6 @@ if __name__ == '__main__':
     trained_model = train_gat(graph_data, input_dim, hidden_dim, output_dim, epochs=500, lr=0.01)
 
     # Save the trained GAT model
-    save_path = "trained_gat_model.pt"
+    save_path = "trained_gat_model_full.pt"
     print("Saving trained GAT model...")
     save_gat_model(trained_model, save_path)

@@ -97,13 +97,13 @@ def visualize_graph(graph_data, features, num_clusters=5, reduction_method='tsne
         alpha=0.7,
         edge_color="gray"
     )
-    plt.colorbar(plt.cm.ScalarMappable(cmap='viridis'), label="Cluster")
+    plt.colorbar(plt.cm.ScalarMappable(cmap='viridis'), label="Cluster", ax=plt.gca())
     plt.title("KNN Graph Visualization with Feature-Based Coloring")
     plt.show()
 
 
 # Save PyG Data object to disk
-def save_graph(graph_data, save_path="graph.pt"):
+def save_graph(graph_data, save_path="graph_full.pt"):
     """
     Save PyG Data object to a file.
     :param graph_data: PyTorch Geometric Data object.
@@ -115,8 +115,8 @@ def save_graph(graph_data, save_path="graph.pt"):
 
 if __name__ == '__main__':
     # File paths
-    feature_file = "image_features.npy"
-    filename_file = "image_filenames.npy"
+    feature_file = "image_features_full.npy"
+    filename_file = "image_filenames_full.npy"
 
     # Step 1: Load Features and Filenames
     print("Loading features and filenames...")

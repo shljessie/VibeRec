@@ -1,0 +1,2 @@
+Trained GAT Model Silhouette Score: 0.9385
+Trained GAT Model Davies-Bouldin Index: 0.5042
