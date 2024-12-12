@@ -110,9 +110,6 @@ def visualize_recommendations(selected_indices, recommendations, image_directory
             plt.title(f"Recommendation {j - 1}")
             plt.axis('off')
 
-        plt.tight_layout()
-        plt.show()
-
         # save the plot
         save_path = os.path.join(save_dir, f"similar_images_query_{query_idx}.png")
         plt.savefig(save_path)

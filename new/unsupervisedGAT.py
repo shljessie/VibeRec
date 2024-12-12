@@ -4,6 +4,8 @@ import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score
+from sklearn.preprocessing import StandardScaler
+
 
 def load_graph(load_path="graph_data.pt"):
     """
@@ -79,29 +81,21 @@ def train_gat_clustering(graph_data, input_dim, hidden_dim, embedding_dim, num_c
     return model, kmeans
 
 # Step 3: Clustering-Friendly Loss
-def clustering_loss(embeddings, edge_index, cluster_assignments):
-    """
-    Compute a clustering-friendly loss by combining edge reconstruction loss with cluster variance minimization.
-    :param embeddings: Node embeddings.
-    :param edge_index: Edge indices representing the graph structure.
-    :param cluster_assignments: Cluster assignments for each node.
-    :return: Scalar loss value.
-    """
-    # Convert cluster_assignments to a PyTorch tensor
+def clustering_loss(embeddings, edge_index, cluster_assignments, alpha=0.8, beta=0.05):
     cluster_assignments = torch.tensor(cluster_assignments, device=embeddings.device)
-
-    # Edge reconstruction loss
     row, col = edge_index
     pos_sim = torch.sum(embeddings[row] * embeddings[col], dim=-1)
     pos_loss = -torch.log(torch.sigmoid(pos_sim) + 1e-15).mean()
 
-    # Cluster variance loss
     cluster_centers = torch.stack(
         [embeddings[cluster_assignments == c].mean(dim=0) for c in range(cluster_assignments.max().item() + 1)]
     )
     cluster_loss = torch.norm(embeddings - cluster_centers[cluster_assignments], dim=1).mean()
 
-    return pos_loss + cluster_loss
+    # Embedding diversity regularization
+    embedding_reg = torch.norm(embeddings, dim=1).mean()
+
+    return alpha * pos_loss + (1 - alpha) * cluster_loss + beta * embedding_reg
 
 
 # Step 4: Save Model
@@ -116,24 +110,37 @@ def save_gat_model(model, save_path="clustering_gat_model.pt"):
 
 
 if __name__ == '__main__':
-  # Path to saved graph
-  graph_path = "graph_full.pt"
-  
-  # Load graph data
-  print("Loading graph...")
-  graph_data = load_graph(graph_path)
-  
-  # Model dimensions
-  input_dim = graph_data.x.size(1)  # Feature dimension
-  hidden_dim = 32
-  embedding_dim = 64  # Embedding size for clustering
-  num_clusters = 5  # Number of clusters
-  
-  # Train the GAT model for clustering
-  print("Training clustering GAT model...")
-  trained_model, kmeans = train_gat_clustering(graph_data, input_dim, hidden_dim, embedding_dim, num_clusters, epochs=300, lr=0.005)
-  
-  # Save the trained GAT model
-  save_path = "clustering_gat_model.pt"
-  print("Saving trained GAT model...")
-  save_gat_model(trained_model, save_path)
+    # Path to saved graph
+    graph_path = "graph_full.pt"
+    
+    # Load graph data
+    print("Loading graph...")
+    graph_data = load_graph(graph_path)
+    graph_data.x = torch.tensor(StandardScaler().fit_transform(graph_data.x.numpy()), dtype=torch.float32)
+    
+    # Model dimensions
+    input_dim = graph_data.x.size(1)  # Feature dimension
+    hidden_dim = 128  # Increase from 32
+    embedding_dim = 256  # Increase from 64
+    heads = 8 
+    num_clusters = 5  # Number of clusters
+    
+    # Train the GAT model for clustering
+    print("Training clustering GAT model...")
+    trained_model, kmeans = train_gat_clustering(graph_data, input_dim, hidden_dim, embedding_dim, num_clusters, epochs=50, lr=0.001)
+    
+    # Save the trained GAT model
+    save_path = "clustering_gat_model.pt"
+    print("Saving trained GAT model...")
+    save_gat_model(trained_model, save_path)
+
+    import matplotlib.pyplot as plt
+    from sklearn.decomposition import PCA
+
+    embeddings = trained_model(graph_data).detach().cpu().numpy()
+    pca = PCA(n_components=2)
+    reduced_embeddings = pca.fit_transform(embeddings)
+
+    plt.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1], c='blue')
+    plt.title("Embedding Visualization")
+    plt.show()
