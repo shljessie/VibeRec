@@ -103,7 +103,7 @@ def evaluate_trained_gat_model(graph_data, model, num_clusters=5):
     print(f"Trained GAT Model Davies-Bouldin Index: {davies_bouldin:.4f}")
 
     # Save metrics to a file
-    with open("gat_trained_model_metrics.txt", "w") as f:
+    with open("gat_clustering_model_metrics.txt", "w") as f:
         f.write(f"Trained GAT Model Silhouette Score: {silhouette:.4f}\n")
         f.write(f"Trained GAT Model Davies-Bouldin Index: {davies_bouldin:.4f}\n")
 
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # Load a trained GAT model if available
     trained_gat_model = None
     try:
-        trained_gat_model = torch.load("trained_gat_model_full.pt")
+        trained_gat_model = torch.load("clustering_gat_model.pt")
     except FileNotFoundError:
         print("Trained GAT model not found. Skipping GAT evaluation.")
 

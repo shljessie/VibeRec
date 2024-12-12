@@ -56,6 +56,7 @@ def select_random_images(feature_embeddings, num_samples=10):
     :param num_samples: Number of random samples to select.
     :return: Indices and selected embeddings.
     """
+    random.seed(42)
     num_images = feature_embeddings.shape[0]
     random_indices = random.sample(range(num_images), num_samples)
     selected_embeddings = feature_embeddings[random_indices]
@@ -75,7 +76,7 @@ def get_recommendations(model, graph_data, selected_indices):
         recommended_indices = predictions[selected_indices].topk(5, dim=1).indices  # Top 5 recommendations
     return recommended_indices
 
-def visualize_recommendations(selected_indices, recommendations, image_directory, filenames):
+def visualize_recommendations(selected_indices, recommendations, image_directory, filenames, save_dir="clustering_recs"):
     """
     Visualize the selected images and their recommendations.
     :param selected_indices: List of indices for the selected query images.
@@ -83,6 +84,10 @@ def visualize_recommendations(selected_indices, recommendations, image_directory
     :param image_directory: Directory where images are stored.
     :param filenames: List of image filenames corresponding to embeddings.
     """
+
+    # Create directory for saving visualizations
+    os.makedirs(save_dir, exist_ok=True)
+
     for i, query_idx in enumerate(selected_indices):
         # Load query image
         query_image_path = os.path.join(image_directory, filenames[query_idx])
@@ -108,17 +113,23 @@ def visualize_recommendations(selected_indices, recommendations, image_directory
         plt.tight_layout()
         plt.show()
 
+        # save the plot
+        save_path = os.path.join(save_dir, f"similar_images_query_{query_idx}.png")
+        plt.savefig(save_path)
+        print(f"Visualization saved to {save_path}")
+        plt.close()
+
 
 # Step 4: Main Function
 if __name__ == '__main__':
     # Load trained GAT model
-    trained_model_path = "trained_gat_model.pt"
+    trained_model_path = "clustering_gat_model.pt"
     trained_model = load_gat_model(trained_model_path)
-    filenames = np.load("image_filenames.npy", allow_pickle=True) 
+    filenames = np.load("image_filenames_full.npy", allow_pickle=True) 
     image_directory = "../images/product" 
 
     # Load graph data
-    graph_data_path = "graph.pt"
+    graph_data_path = "graph_full.pt"
     graph_data = torch.load(graph_data_path)
 
     # Assuming `graph_data.x` contains image embeddings
@@ -126,7 +137,7 @@ if __name__ == '__main__':
 
     # Select 10 random images
     print("Selecting random images...")
-    selected_indices, selected_embeddings = select_random_images(image_embeddings, num_samples=3)
+    selected_indices, selected_embeddings = select_random_images(image_embeddings, num_samples=10)
     print(f"Selected indices: {selected_indices}")
 
     # Get recommendations
@@ -139,5 +150,5 @@ if __name__ == '__main__':
 
     # Visualize recommendations
     print("Visualizing recommendations...")
-    visualize_recommendations(selected_indices, recommendations, image_directory, filenames)
+    visualize_recommendations(selected_indices, recommendations, image_directory, filenames, save_dir="clustering_recs_unsupervised")
 

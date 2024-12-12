@@ -5,6 +5,15 @@ from torch_geometric.nn import GATConv
 from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score
 
+def load_graph(load_path="graph_data.pt"):
+    """
+    Load PyG Data object from a file.
+    :param load_path: File path to load the graph data from.
+    :return: PyTorch Geometric Data object.
+    """
+    graph_data = torch.load(load_path)
+    print(f"Graph loaded from {load_path}")
+    return graph_data
 # Step 1: Define Robust GAT Model for Clustering
 class GAT(nn.Module):
     def __init__(self, input_dim, hidden_dim, embedding_dim, heads=4, dropout=0.3):
@@ -106,7 +115,6 @@ def save_gat_model(model, save_path="clustering_gat_model.pt"):
     print(f"Model saved to {save_path}")
 
 
-Main Function
 if __name__ == '__main__':
   # Path to saved graph
   graph_path = "graph_full.pt"
