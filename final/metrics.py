@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 
-# Step 2: Define GAT Model
+
 class GAT(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, heads=1):
         """
@@ -33,7 +33,7 @@ class GAT(nn.Module):
         x = self.gat2(x, edge_index)
         return F.log_softmax(x, dim=1)
     
-# Metric Functions
+
 def compute_silhouette_score(features, cluster_labels):
     """
     Compute Silhouette Score for clustering.
@@ -86,15 +86,12 @@ def evaluate_trained_gat_model(graph_data, model, num_clusters=5):
     """
     model.eval()
     with torch.no_grad():
-        # Generate node embeddings using the trained GAT model
         embeddings = model(graph_data).detach().cpu().numpy()
 
-    # Perform clustering
     print("Performing clustering with trained GAT model embeddings...")
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
     cluster_labels = kmeans.fit_predict(embeddings)
 
-    # Compute metrics
     print("Computing metrics for trained GAT model...")
     silhouette = compute_silhouette_score(embeddings, cluster_labels)
     davies_bouldin = compute_davies_bouldin_index(embeddings, cluster_labels)
@@ -102,12 +99,11 @@ def evaluate_trained_gat_model(graph_data, model, num_clusters=5):
     print(f"Trained GAT Model Silhouette Score: {silhouette:.4f}")
     print(f"Trained GAT Model Davies-Bouldin Index: {davies_bouldin:.4f}")
 
-    # Save metrics to a file
     with open("gat_clustering_model_metrics.txt", "w") as f:
         f.write(f"Trained GAT Model Silhouette Score: {silhouette:.4f}\n")
         f.write(f"Trained GAT Model Davies-Bouldin Index: {davies_bouldin:.4f}\n")
 
-# Evaluation Script
+
 def evaluate_graph(feature_file, filename_file, graph_file, num_clusters=5, trained_gat_model=None):
     """
     Evaluate the graph using various metrics.
@@ -117,18 +113,13 @@ def evaluate_graph(feature_file, filename_file, graph_file, num_clusters=5, trai
     :param num_clusters: Number of clusters for clustering-based metrics.
     :param trained_gat_model: Optional trained GAT model for additional evaluation.
     """
-    # Load features, filenames, and graph data
     features = np.load(feature_file)
     filenames = np.load(filename_file, allow_pickle=True)
     graph_data = torch.load(graph_file)
 
-    # Perform clustering
-    print("Performing clustering with raw features...")
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
     cluster_labels = kmeans.fit_predict(features)
 
-    # Compute metrics
-    print("Computing metrics for raw features...")
     silhouette = compute_silhouette_score(features, cluster_labels)
     davies_bouldin = compute_davies_bouldin_index(features, cluster_labels)
     density = compute_graph_density(graph_data)
@@ -137,35 +128,26 @@ def evaluate_graph(feature_file, filename_file, graph_file, num_clusters=5, trai
     print(f"Raw Features Davies-Bouldin Index: {davies_bouldin:.4f}")
     print(f"Graph Density: {density:.4f}")
 
-    # Plot degree distribution
-    print("Plotting degree distribution...")
     plot_degree_distribution(graph_data)
 
-    # Save metrics to a file
     with open("graph_metrics.txt", "w") as f:
         f.write(f"Raw Features Silhouette Score: {silhouette:.4f}\n")
         f.write(f"Raw Features Davies-Bouldin Index: {davies_bouldin:.4f}\n")
         f.write(f"Graph Density: {density:.4f}\n")
 
-    # Evaluate with trained GAT model if provided
     if trained_gat_model is not None:
         evaluate_trained_gat_model(graph_data, trained_gat_model, num_clusters)
 
 if __name__ == '__main__':
-    # Paths to input files
     feature_file = "image_features_full.npy"
     filename_file = "image_filenames_full.npy"
     graph_file = "graph_full.pt"
-
-    # Number of clusters
     num_clusters = 5
 
-    # Load a trained GAT model if available
     trained_gat_model = None
     try:
         trained_gat_model = torch.load("clustering_gat_model.pt")
     except FileNotFoundError:
         print("Trained GAT model not found. Skipping GAT evaluation.")
 
-    # Run the evaluation
     evaluate_graph(feature_file, filename_file, graph_file, num_clusters, trained_gat_model)

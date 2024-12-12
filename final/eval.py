@@ -35,8 +35,6 @@ class GAT(nn.Module):
         x = self.gat2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
-
-# Step 1: Load Trained GAT Model
 def load_gat_model(model_path="trained_gat_model.pt"):
     """
     Load the trained GAT model from a file.
@@ -48,7 +46,6 @@ def load_gat_model(model_path="trained_gat_model.pt"):
     print(f"Model loaded from {model_path}")
     return model
 
-# Step 2: Select Random Images
 def select_random_images(feature_embeddings, num_samples=10):
     """
     Select random images (or products) from the feature embeddings.
@@ -62,7 +59,6 @@ def select_random_images(feature_embeddings, num_samples=10):
     selected_embeddings = feature_embeddings[random_indices]
     return random_indices, selected_embeddings
 
-# Step 3: Make Recommendations
 def get_recommendations(model, graph_data, selected_indices):
     """
     Use the trained GAT model to get recommendations for selected images/products.
@@ -73,7 +69,7 @@ def get_recommendations(model, graph_data, selected_indices):
     """
     with torch.no_grad():
         predictions = model(graph_data)
-        recommended_indices = predictions[selected_indices].topk(5, dim=1).indices  # Top 5 recommendations
+        recommended_indices = predictions[selected_indices].topk(5, dim=1).indices 
     return recommended_indices
 
 def visualize_recommendations(selected_indices, recommendations, image_directory, filenames, save_dir="clustering_recs"):
@@ -84,20 +80,15 @@ def visualize_recommendations(selected_indices, recommendations, image_directory
     :param image_directory: Directory where images are stored.
     :param filenames: List of image filenames corresponding to embeddings.
     """
-
-    # Create directory for saving visualizations
     os.makedirs(save_dir, exist_ok=True)
 
     for i, query_idx in enumerate(selected_indices):
-        # Load query image
         query_image_path = os.path.join(image_directory, filenames[query_idx])
         query_image = Image.open(query_image_path)
 
-        # Load recommended images
         recommended_image_paths = [os.path.join(image_directory, filenames[rec_idx]) for rec_idx in recommendations[i]]
         recommended_images = [Image.open(img_path) for img_path in recommended_image_paths]
 
-        # Plot query and recommended images
         plt.figure(figsize=(15, 5))
         plt.subplot(1, len(recommended_images) + 1, 1)
         plt.imshow(query_image)
@@ -110,42 +101,28 @@ def visualize_recommendations(selected_indices, recommendations, image_directory
             plt.title(f"Recommendation {j - 1}")
             plt.axis('off')
 
-        # save the plot
         save_path = os.path.join(save_dir, f"similar_images_query_{query_idx}.png")
         plt.savefig(save_path)
-        print(f"Visualization saved to {save_path}")
         plt.close()
 
 
-# Step 4: Main Function
 if __name__ == '__main__':
-    # Load trained GAT model
     trained_model_path = "clustering_gat_model.pt"
     trained_model = load_gat_model(trained_model_path)
     filenames = np.load("image_filenames_full.npy", allow_pickle=True) 
     image_directory = "../images/product" 
 
-    # Load graph data
     graph_data_path = "graph_full.pt"
     graph_data = torch.load(graph_data_path)
-
-    # Assuming `graph_data.x` contains image embeddings
     image_embeddings = graph_data.x.numpy()
 
-    # Select 10 random images
-    print("Selecting random images...")
     selected_indices, selected_embeddings = select_random_images(image_embeddings, num_samples=10)
     print(f"Selected indices: {selected_indices}")
 
-    # Get recommendations
-    print("Getting recommendations...")
     recommendations = get_recommendations(trained_model, graph_data, selected_indices)
 
-    # Print recommendations
     for idx, recs in zip(selected_indices, recommendations):
         print(f"Image {idx} recommendations: {recs.tolist()}")
 
-    # Visualize recommendations
-    print("Visualizing recommendations...")
     visualize_recommendations(selected_indices, recommendations, image_directory, filenames, save_dir="clustering_recs_unsupervised")
 

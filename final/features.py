@@ -13,8 +13,8 @@ def preprocess_image(image_path, target_size=(224, 224)):
     :return: Preprocessed PIL image.
     """
     try:
-        image = Image.open(image_path).convert('RGB')  # Ensure RGB format
-        image = image.resize(target_size, Image.ANTIALIAS)  # Resize image
+        image = Image.open(image_path).convert('RGB')
+        image = image.resize(target_size, Image.ANTIALIAS)
         return image
     except Exception as e:
         raise RuntimeError(f"Error preprocessing image {image_path}: {e}")
@@ -29,16 +29,15 @@ def extract_features(image_path, processor, model, target_size=(224, 224)):
     :return: Extracted feature vector.
     """
     try:
-        # Preprocess image
         image = preprocess_image(image_path, target_size)
 
         # Use processor to prepare input
-        inputs = processor(images=image, return_tensors="pt")  # Wrap image in a list
+        inputs = processor(images=image, return_tensors="pt")
 
         # Extract features using the model
         with torch.no_grad():
             outputs = model(**inputs)
-            features = outputs.logits[0].numpy()  # Access single batch element
+            features = outputs.logits[0].numpy()
         return features
     except Exception as e:
         raise RuntimeError(f"Error extracting features from {image_path}: {e}")
@@ -67,23 +66,19 @@ def process_directory(directory_path, processor, model, limit=None):
             filenames.append(filename)
         except Exception as e:
             print(f"Error processing {filename}: {e}")
-            continue  # Skip problematic files
+            continue
 
     return np.array(features_list), filenames
 
 if __name__ == '__main__':
-    # Load the processor and model
     processor = AutoImageProcessor.from_pretrained("arize-ai/resnet-50-fashion-mnist-quality-drift")
     model = AutoModelForImageClassification.from_pretrained("arize-ai/resnet-50-fashion-mnist-quality-drift")
     model.eval()
 
-    # Directory containing images
     image_directory = "../images/product"
 
-    # Process the directory and extract features
     features, filenames = process_directory(image_directory, processor, model)
 
-    # Save features and filenames for future use
     np.save("image_features_full.npy", features)
     np.save("image_filenames_full.npy", filenames)
 
